@@ -29,6 +29,11 @@ class BookingForm extends Component
 
     public string $errorMessage = '';
 
+    // WhatsApp Gate for Google Logged-in players
+    public bool $hasWhatsApp = false;
+    public string $whatsappModalInput = '';
+    public string $whatsappError = '';
+
     public function mount(GameSession $session): void
     {
         $this->session = $session->load(['teams.bookingPlayers.booking']);
@@ -38,9 +43,46 @@ class BookingForm extends Component
             $this->primaryName = $user->name;
             $this->primaryEmail = $user->email;
             $this->primaryPhone = $user->phone ?? '';
+            $this->hasWhatsApp = ! empty($user->phone);
+            $this->whatsappModalInput = $this->primaryPhone;
+        } else {
+            $this->hasWhatsApp = false;
         }
 
         $this->updateAdditionalPlayersCount();
+    }
+
+    public function saveWhatsApp(): void
+    {
+        $this->whatsappError = '';
+
+        if (! Auth::check()) {
+            $this->whatsappError = 'Silakan masuk dengan akun Google terlebih dahulu.';
+            return;
+        }
+
+        $validated = $this->validate([
+            'whatsappModalInput' => ['required', 'string', 'regex:/^(\+62|62|0)8[1-9][0-9]{6,10}$/'],
+        ], [
+            'whatsappModalInput.required' => 'Nomor WhatsApp wajib diisi.',
+            'whatsappModalInput.regex' => 'Format nomor WhatsApp tidak valid (contoh: 081234567890).',
+        ]);
+
+        $phone = $validated['whatsappModalInput'];
+        $user = Auth::user();
+        $user->update(['phone' => $phone]);
+
+        \App\Models\PlayerProfile::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'name' => $user->name,
+                'phone' => $phone,
+                'email' => $user->email,
+            ]
+        );
+
+        $this->primaryPhone = $phone;
+        $this->hasWhatsApp = true;
     }
 
     public function updatedBookingType(): void
@@ -101,6 +143,12 @@ class BookingForm extends Component
         if (! Auth::check()) {
             return redirect()->route('login', ['redirect_to' => route('booking.show', $this->session)])
                 ->with('warning', 'Silakan masuk dengan akun Google Anda terlebih dahulu untuk menyelesaikan booking.');
+        }
+
+        if (empty(Auth::user()->phone)) {
+            $this->errorMessage = 'Wajib mengisi nomor WhatsApp aktif terlebih dahulu sebelum dapat membuat pesanan.';
+            $this->hasWhatsApp = false;
+            return null;
         }
 
         $rules = [

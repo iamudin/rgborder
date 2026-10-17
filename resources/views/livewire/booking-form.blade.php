@@ -26,7 +26,90 @@
         </div>
     @endif
 
-    <form wire:submit.prevent="submitBooking" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    @if(! Auth::check())
+        <!-- GATE 1: WAJIB MASUK DENGAN AKUN GOOGLE SEBELUM MELIHAT FORM ORDER -->
+        <div class="p-8 sm:p-10 rounded-3xl bg-gradient-to-b from-[#0f172a] via-[#0c1222] to-[#090d16] border border-cyan-500/40 shadow-[0_0_35px_rgba(6,182,212,0.15)] text-center max-w-xl mx-auto space-y-6">
+            <div class="w-16 h-16 rounded-2xl bg-cyan-950/80 border border-cyan-500/50 mx-auto flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(6,182,212,0.3)]">
+                🔒
+            </div>
+            <div>
+                <span class="text-xs font-mono font-bold tracking-wider uppercase text-cyan-400">Autentikasi Pemain Diperlukan</span>
+                <h3 class="font-orbitron font-extrabold text-xl sm:text-2xl text-white mt-1">Masuk dengan Akun Google</h3>
+                <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+                    Untuk mengakses form pemesanan sesi, memilih tim, dan mengunci slot arena, silakan masuk menggunakan akun Google Anda terlebih dahulu.
+                </p>
+            </div>
+            <div class="pt-2">
+                <a href="{{ route('login', ['redirect_to' => route('booking.show', $session)]) }}" 
+                   class="inline-flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-red-500 via-purple-600 to-cyan-500 hover:from-red-600 hover:to-cyan-600 text-white font-orbitron font-bold text-xs uppercase tracking-wider shadow-[0_0_25px_rgba(6,182,212,0.4)] transition-all transform hover:-translate-y-0.5">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.761H12.545z"/>
+                    </svg>
+                    <span>Masuk dengan Google</span>
+                </a>
+            </div>
+        </div>
+
+    @elseif(! $hasWhatsApp)
+        <!-- GATE 2: WAJIB MENGISI NOMOR WHATSAPP UNTUK MELIHAT FORM ORDER -->
+        <div class="p-8 sm:p-10 rounded-3xl bg-gradient-to-b from-[#181309] via-[#10131d] to-[#090d16] border border-amber-500/60 shadow-[0_0_40px_rgba(245,158,11,0.25)] text-center max-w-xl mx-auto space-y-6 relative overflow-hidden">
+            <!-- Cyber Corner Accents -->
+            <div class="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-amber-400"></div>
+            <div class="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-amber-400"></div>
+            <div class="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-amber-400"></div>
+            <div class="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-amber-400"></div>
+
+            <div class="w-16 h-16 rounded-2xl bg-amber-950/80 border border-amber-500/70 mx-auto flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(245,158,11,0.35)] animate-pulse">
+                💬
+            </div>
+
+            <div>
+                <span class="text-xs font-mono font-bold tracking-wider uppercase text-amber-400">Verifikasi WhatsApp Pemain</span>
+                <h3 class="font-orbitron font-extrabold text-xl sm:text-2xl text-white mt-1">Wajib Mengisi Nomor WhatsApp</h3>
+                <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+                    Halo <strong class="text-white font-semibold">{{ Auth::user()->name }}</strong>! Akun Google Anda belum memiliki nomor WhatsApp aktif. Nomor WhatsApp <strong>wajib diisi</strong> agar dapat melihat form order, menerima konfirmasi e-tiket, dan kode QR check-in arena.
+                </p>
+            </div>
+
+            <form wire:submit.prevent="saveWhatsApp" class="space-y-4 max-w-sm mx-auto text-left pt-2">
+                <div>
+                    <label class="block text-xs font-mono text-slate-200 mb-1.5 font-bold">
+                        Nomor WhatsApp Pemain: <span class="text-amber-400">*</span>
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-xs font-mono text-slate-400">
+                            🇮🇩 +62
+                        </span>
+                        <input type="text" 
+                               wire:model="whatsappModalInput" 
+                               placeholder="Contoh: 081234567890" 
+                               class="w-full pl-16 pr-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-white font-mono text-xs focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 shadow-inner" />
+                    </div>
+                    @error('whatsappModalInput')
+                        <span class="text-[11px] text-red-400 mt-1 block">{{ $message }}</span>
+                    @enderror
+                    @if($whatsappError)
+                        <span class="text-[11px] text-red-400 mt-1 block">{{ $whatsappError }}</span>
+                    @endif
+                </div>
+
+                <button type="submit" 
+                        class="w-full py-3.5 rounded-xl font-orbitron font-bold text-xs uppercase tracking-wider text-black bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 transition-all shadow-[0_0_20px_rgba(245,158,11,0.4)] flex items-center justify-center gap-2 cursor-pointer">
+                    <span>⚡</span>
+                    <span>Simpan WhatsApp & Buka Form Order</span>
+                </button>
+
+                <div class="text-center pt-1">
+                    <a href="{{ route('profile', ['redirect_to' => route('booking.show', $session)]) }}" class="text-[11px] text-slate-400 hover:text-amber-300 transition-colors underline underline-offset-4">
+                        Atau lengkapi data di Halaman Profil Pemain →
+                    </a>
+                </div>
+            </form>
+        </div>
+
+    @else
+        <!-- FORM ORDER LENGKAP JIKA SUDAH LOGIN & MEMILIKI NOMOR WHATSAPP -->
+        <form wire:submit.prevent="submitBooking" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Left 2 Cols: Form Steps -->
         <div class="lg:col-span-2 space-y-6">
 
@@ -325,4 +408,5 @@
             </div>
         </div>
     </form>
+@endif
 </div>

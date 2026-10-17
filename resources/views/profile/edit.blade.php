@@ -15,6 +15,9 @@
     <div class="p-6 sm:p-8 rounded-3xl bg-[#0f172a]/95 border border-slate-800 shadow-2xl space-y-6">
         <form action="{{ route('profile.update') }}" method="POST" class="space-y-4">
             @csrf
+            @if(request()->filled('redirect_to'))
+                <input type="hidden" name="redirect_to" value="{{ request('redirect_to') }}">
+            @endif
             <div>
                 <label class="block text-xs font-medium text-slate-300 mb-1">Nama Pemain / Callsign <span class="text-red-400">*</span></label>
                 <input type="text" name="name" value="{{ old('name', $user->name) }}" required class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:border-cyan-400 focus:outline-none">
@@ -34,9 +37,15 @@
             </div>
 
             <div class="pt-4 border-t border-slate-800 flex items-center justify-between">
-                <a href="{{ route('dashboard') }}" wire:navigate.hover class="text-xs text-slate-400 hover:text-white">
-                    ← Kembali ke Dashboard
-                </a>
+                @if(request()->filled('redirect_to'))
+                    <a href="{{ request('redirect_to') }}" wire:navigate.hover class="text-xs text-slate-400 hover:text-white">
+                        ← Kembali ke Form Order
+                    </a>
+                @else
+                    <a href="{{ route('dashboard') }}" wire:navigate.hover class="text-xs text-slate-400 hover:text-white">
+                        ← Kembali ke Dashboard
+                    </a>
+                @endif
                 <button type="submit" class="px-6 py-2.5 rounded-xl font-orbitron font-bold text-xs uppercase tracking-wider text-black bg-cyan-400 hover:bg-cyan-300 transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)]">
                     Simpan Perubahan
                 </button>

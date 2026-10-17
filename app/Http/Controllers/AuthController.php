@@ -80,9 +80,9 @@ class AuthController extends Controller
 
         ActivityLog::record('auth.google_login', $user, ['email' => $user->email], $user);
 
-        // If user doesn't have phone number yet, suggest completing it
+        // If user doesn't have phone number yet, enforce WhatsApp requirement
         if (empty($user->phone)) {
-            return redirect()->intended(route('profile'))->with('info', 'Selamat datang! Silakan lengkapi nomor WhatsApp Anda untuk konfirmasi booking dan tiket.');
+            return redirect()->intended(route('profile'))->with('warning', 'Selamat datang! Wajib mengisi nomor WhatsApp aktif Anda untuk membuka form order dan verifikasi tiket.');
         }
 
         return redirect()->intended(route('dashboard'));

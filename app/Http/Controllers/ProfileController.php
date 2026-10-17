@@ -51,6 +51,13 @@ class ProfileController extends Controller
             ]
         );
 
+        if ($request->filled('redirect_to')) {
+            $redirectTo = $request->input('redirect_to');
+            if (str_starts_with($redirectTo, '/') || str_starts_with($redirectTo, url('/'))) {
+                return redirect($redirectTo)->with('success', 'Profil dan nomor WhatsApp berhasil diperbarui! Form order kini aktif.');
+            }
+        }
+
         return redirect()->route('profile')->with('success', 'Profil dan nomor WhatsApp Anda berhasil diperbarui!');
     }
 }
